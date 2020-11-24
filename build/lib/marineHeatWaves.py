@@ -22,9 +22,6 @@ def calculate_stats(TClim, feb29, doyClim, clim_start, clim_end, windowHalfWidth
     # Inialize arrays
     thresh_climYear = np.NaN*np.zeros(lenClimYear)
     seas_climYear = np.NaN*np.zeros(lenClimYear)
-    clim = {}
-    clim['thresh'] = np.NaN*np.zeros(TClim)
-    clim['seas'] = np.NaN*np.zeros(TClim)
     # Loop over all day-of-year values, and calculate threshold and seasonal climatology across years
     for d in range(1,lenClimYear+1):
         # Special case for Feb 29
@@ -46,7 +43,7 @@ def calculate_stats(TClim, feb29, doyClim, clim_start, clim_end, windowHalfWidth
     thresh_climYear[feb29-1] = 0.5*thresh_climYear[feb29-2] + 0.5*thresh_climYear[feb29]
     seas_climYear[feb29-1] = 0.5*seas_climYear[feb29-2] + 0.5*seas_climYear[feb29]
 
-    return thresh_climYear, seas_climYear, clim
+    return thresh_climYear, seas_climYear
 
 def get_temp_clim_time_series(temp, T, year, month, day, doy, alternateClimatology, month_leapYear, day_leapYear, doy_leapYear):
     
@@ -92,6 +89,19 @@ def smooth_time_series(smoothPercentile, smoothPercentileWidth, thresh_climYear,
             seas_climYear = runavg(seas_climYear, smoothPercentileWidth)
 
     return thresh_climYear, seas_climYear
+
+def replicate_clim_to_time_series(TClim, thresh_climYear, seas_climYear, doy):
+    """
+    Generate threshold for full time series
+    """
+    print('*********** entered replicate clim *******')
+    clim = {}
+    clim['thresh'] = np.NaN*np.zeros(TClim)
+    clim['seas'] = np.NaN*np.zeros(TClim)
+    clim['thresh'] = thresh_climYear[doy.astype(int)-1]
+    clim['seas'] = seas_climYear[doy.astype(int)-1]
+
+    return clim
 
 def detect(t, temp, climatologyPeriod=[None,None], pctile=90, windowHalfWidth=5, smoothPercentile=True, smoothPercentileWidth=31, minDuration=5, joinAcrossGaps=True, maxGap=2, maxPadLength=False, coldSpells=False, alternateClimatology=False):
     '''
@@ -310,13 +320,11 @@ def detect(t, temp, climatologyPeriod=[None,None], pctile=90, windowHalfWidth=5,
     # Start and end indices
     clim_start = np.where(yearClim == climatologyPeriod[0])[0][0]
     clim_end = np.where(yearClim == climatologyPeriod[1])[0][-1]
-    thresh_climYear, seas_climYear, clim = calculate_stats(TClim, feb29, doyClim, clim_start, clim_end, windowHalfWidth, tempClim, pctile)
+    thresh_climYear, seas_climYear = calculate_stats(TClim, feb29, doyClim, clim_start, clim_end, windowHalfWidth, tempClim, pctile)
 
     thresh_climYear, seas_climYear = smooth_time_series(smoothPercentile, smoothPercentileWidth, thresh_climYear, seas_climYear)
 
-    # Generate threshold for full time series
-    clim['thresh'] = thresh_climYear[doy.astype(int)-1]
-    clim['seas'] = seas_climYear[doy.astype(int)-1]
+    clim = replicate_clim_to_time_series(TClim, thresh_climYear, seas_climYear, doy)
 
     # Save vector indicating which points in temp are missing values
     clim['missing'] = np.isnan(temp)
