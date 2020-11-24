@@ -13,6 +13,15 @@ from scipy import stats
 import scipy.ndimage as ndimage
 from datetime import date
 
+def find_clim_start_end(yearClim, climatologyPeriod):
+    """
+    Find start and end indices of climatology period
+    """
+    print('****** entered find clim start end *******')
+    clim_start = np.where(yearClim == climatologyPeriod[0])[0][0]
+    clim_end = np.where(yearClim == climatologyPeriod[1])[0][-1]
+
+    return clim_start, clim_end
 
 def calculate_stats(TClim, feb29, doyClim, clim_start, clim_end, windowHalfWidth, tempClim, pctile):
     
@@ -317,9 +326,8 @@ def detect(t, temp, climatologyPeriod=[None,None], pctile=90, windowHalfWidth=5,
         temp = pad(temp, maxPadLength=maxPadLength)
         tempClim = pad(tempClim, maxPadLength=maxPadLength)
 
-    # Start and end indices
-    clim_start = np.where(yearClim == climatologyPeriod[0])[0][0]
-    clim_end = np.where(yearClim == climatologyPeriod[1])[0][-1]
+    clim_start, clim_end = find_clim_start_end(yearClim, climatologyPeriod)
+
     thresh_climYear, seas_climYear = calculate_stats(TClim, feb29, doyClim, clim_start, clim_end, windowHalfWidth, tempClim, pctile)
 
     thresh_climYear, seas_climYear = smooth_time_series(smoothPercentile, smoothPercentileWidth, thresh_climYear, seas_climYear)
