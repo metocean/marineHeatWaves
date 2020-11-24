@@ -14,6 +14,38 @@ import scipy.ndimage as ndimage
 from datetime import date
 
 
+def calculate_stats(lenClimYear, TClim, feb29, doyClim, clim_start, clim_end, windowHalfWidth, tempClim, pctile):
+    
+    print('****** entered calc method *******')
+    # Inialize arrays
+    thresh_climYear = np.NaN*np.zeros(lenClimYear)
+    seas_climYear = np.NaN*np.zeros(lenClimYear)
+    clim = {}
+    clim['thresh'] = np.NaN*np.zeros(TClim)
+    clim['seas'] = np.NaN*np.zeros(TClim)
+    # Loop over all day-of-year values, and calculate threshold and seasonal climatology across years
+    for d in range(1,lenClimYear+1):
+        # Special case for Feb 29
+        if d == feb29:
+            continue
+        # find all indices for each day of the year +/- windowHalfWidth and from them calculate the threshold
+        tt0 = np.where(doyClim[clim_start:clim_end+1] == d)[0] 
+        # If this doy value does not exist (i.e. in 360-day calendars) then skip it
+        if len(tt0) == 0:
+            continue
+        tt = np.array([])
+        for w in range(-windowHalfWidth, windowHalfWidth+1):
+            tt = np.append(tt, clim_start+tt0 + w)
+        tt = tt[tt>=0] # Reject indices "before" the first element
+        tt = tt[tt<TClim] # Reject indices "after" the last element
+        thresh_climYear[d-1] = np.percentile(nonans(tempClim[tt.astype(int)]), pctile)
+        seas_climYear[d-1] = np.mean(nonans(tempClim[tt.astype(int)]))
+    # Special case for Feb 29
+    thresh_climYear[feb29-1] = 0.5*thresh_climYear[feb29-2] + 0.5*thresh_climYear[feb29]
+    seas_climYear[feb29-1] = 0.5*seas_climYear[feb29-2] + 0.5*seas_climYear[feb29]
+
+    return thresh_climYear, seas_climYear, clim
+
 def detect(t, temp, climatologyPeriod=[None,None], pctile=90, windowHalfWidth=5, smoothPercentile=True, smoothPercentileWidth=31, minDuration=5, joinAcrossGaps=True, maxGap=2, maxPadLength=False, coldSpells=False, alternateClimatology=False):
     '''
 
@@ -253,32 +285,7 @@ def detect(t, temp, climatologyPeriod=[None,None], pctile=90, windowHalfWidth=5,
     # Start and end indices
     clim_start = np.where(yearClim == climatologyPeriod[0])[0][0]
     clim_end = np.where(yearClim == climatologyPeriod[1])[0][-1]
-    # Inialize arrays
-    thresh_climYear = np.NaN*np.zeros(lenClimYear)
-    seas_climYear = np.NaN*np.zeros(lenClimYear)
-    clim = {}
-    clim['thresh'] = np.NaN*np.zeros(TClim)
-    clim['seas'] = np.NaN*np.zeros(TClim)
-    # Loop over all day-of-year values, and calculate threshold and seasonal climatology across years
-    for d in range(1,lenClimYear+1):
-        # Special case for Feb 29
-        if d == feb29:
-            continue
-        # find all indices for each day of the year +/- windowHalfWidth and from them calculate the threshold
-        tt0 = np.where(doyClim[clim_start:clim_end+1] == d)[0] 
-        # If this doy value does not exist (i.e. in 360-day calendars) then skip it
-        if len(tt0) == 0:
-            continue
-        tt = np.array([])
-        for w in range(-windowHalfWidth, windowHalfWidth+1):
-            tt = np.append(tt, clim_start+tt0 + w)
-        tt = tt[tt>=0] # Reject indices "before" the first element
-        tt = tt[tt<TClim] # Reject indices "after" the last element
-        thresh_climYear[d-1] = np.percentile(nonans(tempClim[tt.astype(int)]), pctile)
-        seas_climYear[d-1] = np.mean(nonans(tempClim[tt.astype(int)]))
-    # Special case for Feb 29
-    thresh_climYear[feb29-1] = 0.5*thresh_climYear[feb29-2] + 0.5*thresh_climYear[feb29]
-    seas_climYear[feb29-1] = 0.5*seas_climYear[feb29-2] + 0.5*seas_climYear[feb29]
+    thresh_climYear, seas_climYear, clim = calculate_stats(lenClimYear, TClim, feb29, doyClim, clim_start, clim_end, windowHalfWidth, tempClim, pctile)
 
     # Smooth if desired
     if smoothPercentile:
