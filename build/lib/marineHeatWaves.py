@@ -14,9 +14,11 @@ import scipy.ndimage as ndimage
 from datetime import date
 
 
-def calculate_stats(lenClimYear, TClim, feb29, doyClim, clim_start, clim_end, windowHalfWidth, tempClim, pctile):
+def calculate_stats(TClim, feb29, doyClim, clim_start, clim_end, windowHalfWidth, tempClim, pctile):
     
     print('****** entered calc method *******')
+    # Length of climatological year
+    lenClimYear = 366
     # Inialize arrays
     thresh_climYear = np.NaN*np.zeros(lenClimYear)
     seas_climYear = np.NaN*np.zeros(lenClimYear)
@@ -72,6 +74,24 @@ def get_temp_clim_time_series(temp, T, year, month, day, doy, alternateClimatolo
         doyClim = doy.copy()
 
     return tempClim, TClim, yearClim, monthClim, dayClim, doyClim
+
+def smooth_time_series(smoothPercentile, smoothPercentileWidth, thresh_climYear, seas_climYear):
+
+    print("************** Entered smooth... *************")
+    # Smooth if desired
+    if smoothPercentile:
+        # If the climatology contains NaNs, then assume it is a <365-day year and deal accordingly
+        if np.sum(np.isnan(seas_climYear)) + np.sum(np.isnan(thresh_climYear)):
+            valid = ~np.isnan(thresh_climYear)
+            thresh_climYear[valid] = runavg(thresh_climYear[valid], smoothPercentileWidth)
+            valid = ~np.isnan(seas_climYear)
+            seas_climYear[valid] = runavg(seas_climYear[valid], smoothPercentileWidth)
+        # >= 365-day year
+        else:
+            thresh_climYear = runavg(thresh_climYear, smoothPercentileWidth)
+            seas_climYear = runavg(seas_climYear, smoothPercentileWidth)
+
+    return thresh_climYear, seas_climYear
 
 def detect(t, temp, climatologyPeriod=[None,None], pctile=90, windowHalfWidth=5, smoothPercentile=True, smoothPercentileWidth=31, minDuration=5, joinAcrossGaps=True, maxGap=2, maxPadLength=False, coldSpells=False, alternateClimatology=False):
     '''
@@ -287,25 +307,12 @@ def detect(t, temp, climatologyPeriod=[None,None], pctile=90, windowHalfWidth=5,
         temp = pad(temp, maxPadLength=maxPadLength)
         tempClim = pad(tempClim, maxPadLength=maxPadLength)
 
-    # Length of climatological year
-    lenClimYear = 366
     # Start and end indices
     clim_start = np.where(yearClim == climatologyPeriod[0])[0][0]
     clim_end = np.where(yearClim == climatologyPeriod[1])[0][-1]
-    thresh_climYear, seas_climYear, clim = calculate_stats(lenClimYear, TClim, feb29, doyClim, clim_start, clim_end, windowHalfWidth, tempClim, pctile)
+    thresh_climYear, seas_climYear, clim = calculate_stats(TClim, feb29, doyClim, clim_start, clim_end, windowHalfWidth, tempClim, pctile)
 
-    # Smooth if desired
-    if smoothPercentile:
-        # If the climatology contains NaNs, then assume it is a <365-day year and deal accordingly
-        if np.sum(np.isnan(seas_climYear)) + np.sum(np.isnan(thresh_climYear)):
-            valid = ~np.isnan(thresh_climYear)
-            thresh_climYear[valid] = runavg(thresh_climYear[valid], smoothPercentileWidth)
-            valid = ~np.isnan(seas_climYear)
-            seas_climYear[valid] = runavg(seas_climYear[valid], smoothPercentileWidth)
-        # >= 365-day year
-        else:
-            thresh_climYear = runavg(thresh_climYear, smoothPercentileWidth)
-            seas_climYear = runavg(seas_climYear, smoothPercentileWidth)
+    thresh_climYear, seas_climYear = smooth_time_series(smoothPercentile, smoothPercentileWidth, thresh_climYear, seas_climYear)
 
     # Generate threshold for full time series
     clim['thresh'] = thresh_climYear[doy.astype(int)-1]
