@@ -46,6 +46,33 @@ def calculate_stats(lenClimYear, TClim, feb29, doyClim, clim_start, clim_end, wi
 
     return thresh_climYear, seas_climYear, clim
 
+def get_temp_clim_time_series(temp, T, year, month, day, doy, alternateClimatology, month_leapYear, day_leapYear, doy_leapYear):
+    
+    print("************** Entered get_temp_clim... *************")
+    # if alternate temperature time series is supplied for the calculation of the climatology
+    if alternateClimatology:
+        tClim = alternateClimatology[0]
+        tempClim = alternateClimatology[1]
+        TClim = len(tClim)
+        yearClim = np.zeros((TClim))
+        monthClim = np.zeros((TClim))
+        dayClim = np.zeros((TClim))
+        doyClim = np.zeros((TClim))
+        for i in range(TClim):
+            yearClim[i] = date.fromordinal(tClim[i]).year
+            monthClim[i] = date.fromordinal(tClim[i]).month
+            dayClim[i] = date.fromordinal(tClim[i]).day
+            doyClim[i] = doy_leapYear[(month_leapYear == monthClim[i]) * (day_leapYear == dayClim[i])]
+    else:
+        tempClim = temp.copy()
+        TClim = np.array([T]).copy()[0]
+        yearClim = year.copy()
+        monthClim = month.copy()
+        dayClim = day.copy()
+        doyClim = doy.copy()
+
+    return tempClim, TClim, yearClim, monthClim, dayClim, doyClim
+
 def detect(t, temp, climatologyPeriod=[None,None], pctile=90, windowHalfWidth=5, smoothPercentile=True, smoothPercentileWidth=31, minDuration=5, joinAcrossGaps=True, maxGap=2, maxPadLength=False, coldSpells=False, alternateClimatology=False):
     '''
 
@@ -248,27 +275,7 @@ def detect(t, temp, climatologyPeriod=[None,None], pctile=90, windowHalfWidth=5,
     # Calculate threshold and seasonal climatology (varying with day-of-year)
     #
 
-    # if alternate temperature time series is supplied for the calculation of the climatology
-    if alternateClimatology:
-        tClim = alternateClimatology[0]
-        tempClim = alternateClimatology[1]
-        TClim = len(tClim)
-        yearClim = np.zeros((TClim))
-        monthClim = np.zeros((TClim))
-        dayClim = np.zeros((TClim))
-        doyClim = np.zeros((TClim))
-        for i in range(TClim):
-            yearClim[i] = date.fromordinal(tClim[i]).year
-            monthClim[i] = date.fromordinal(tClim[i]).month
-            dayClim[i] = date.fromordinal(tClim[i]).day
-            doyClim[i] = doy_leapYear[(month_leapYear == monthClim[i]) * (day_leapYear == dayClim[i])]
-    else:
-        tempClim = temp.copy()
-        TClim = np.array([T]).copy()[0]
-        yearClim = year.copy()
-        monthClim = month.copy()
-        dayClim = day.copy()
-        doyClim = doy.copy()
+    tempClim, TClim, yearClim, monthClim, dayClim, doyClim = get_temp_clim_time_series(temp, T, year, month, day, doy, alternateClimatology, month_leapYear, day_leapYear, doy_leapYear)
 
     # Flip temp time series if detecting cold spells
     if coldSpells:
