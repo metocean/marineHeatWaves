@@ -112,6 +112,16 @@ def replicate_clim_to_time_series(TClim, thresh_climYear, seas_climYear, doy):
 
     return clim
 
+def fill_gaps_with_clim(clim, temp):
+    """
+    Save vector in clim dict indicating which points in temp are missing values
+    Set all remaining missing temp values equal to the climatology
+    """    
+    clim['missing'] = np.isnan(temp)
+    temp[np.isnan(temp)] = clim['seas'][np.isnan(temp)]
+    
+    return clim, temp
+
 def detect(t, temp, climatologyPeriod=[None,None], pctile=90, windowHalfWidth=5, smoothPercentile=True, smoothPercentileWidth=31, minDuration=5, joinAcrossGaps=True, maxGap=2, maxPadLength=False, coldSpells=False, alternateClimatology=False):
     '''
 
@@ -334,10 +344,7 @@ def detect(t, temp, climatologyPeriod=[None,None], pctile=90, windowHalfWidth=5,
 
     clim = replicate_clim_to_time_series(TClim, thresh_climYear, seas_climYear, doy)
 
-    # Save vector indicating which points in temp are missing values
-    clim['missing'] = np.isnan(temp)
-    # Set all remaining missing temp values equal to the climatology
-    temp[np.isnan(temp)] = clim['seas'][np.isnan(temp)]
+    clim, temp = fill_gaps_with_clim(clim, temp)
 
     #
     # Find MHWs as exceedances above the threshold
