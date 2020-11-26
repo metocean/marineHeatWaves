@@ -139,7 +139,12 @@ def check_maxPadLength(maxPadLength, pad, temp, tempClim):
     
     return temp, tempClim
 
-def detect(t, temp, climatologyPeriod=[None,None], pctile=90, windowHalfWidth=5, smoothPercentile=True, smoothPercentileWidth=31, minDuration=5, joinAcrossGaps=True, maxGap=2, maxPadLength=False, coldSpells=False, alternateClimatology=False):
+def load_given_clim(givenClimThresh):
+    seas_climYear = givenClimThresh[0]
+    thresh_climYear = givenClimThresh[1]
+    return thresh_climYear, seas_climYear
+
+def detect(t, temp, climatologyPeriod=[None,None], pctile=90, windowHalfWidth=5, smoothPercentile=True, smoothPercentileWidth=31, minDuration=5, joinAcrossGaps=True, maxGap=2, maxPadLength=False, coldSpells=False, alternateClimatology=False, givenClimThresh=False):
     '''
 
     Applies the Hobday et al. (2016) marine heat wave definition to an input time
@@ -236,6 +241,13 @@ def detect(t, temp, climatologyPeriod=[None,None], pctile=90, windowHalfWidth=5,
                              [1D numpy array of length TClim] and (2) the second element of
                              the list is a temperature vector [1D numpy array of length TClim].
                              (DEFAULT = False)
+      givenClimThresh        Specifies a previously calculated daily temperature climatology and 
+                             threshold 1-year time series. Format is as a list of numpy 
+                             arrays: (1) the first element of the list is a climatological 
+                             temperature vector [1D numpy array of length 366 (days)] and (2) the
+                             second element of the list a temperature threshold vector [1D numpy 
+                             array of length 366 (days)].
+                             (DEFAULT = FALSE)
 
     Notes:
 
@@ -349,7 +361,10 @@ def detect(t, temp, climatologyPeriod=[None,None], pctile=90, windowHalfWidth=5,
 
     clim_start, clim_end = find_clim_start_end(yearClim, climatologyPeriod)
 
-    thresh_climYear, seas_climYear = calculate_stats(TClim, feb29, doyClim, clim_start, clim_end, windowHalfWidth, tempClim, pctile)
+    if not givenClimThresh:
+        thresh_climYear, seas_climYear = calculate_stats(TClim, feb29, doyClim, clim_start, clim_end, windowHalfWidth, tempClim, pctile)
+    else:
+        thresh_climYear, seas_climYear =  load_given_clim(givenClimThresh)
 
     thresh_climYear, seas_climYear = smooth_time_series(smoothPercentile, smoothPercentileWidth, thresh_climYear, seas_climYear)
 
