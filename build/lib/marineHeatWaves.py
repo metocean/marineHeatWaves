@@ -122,6 +122,13 @@ def fill_gaps_with_clim(clim, temp):
     
     return clim, temp
 
+def check_cold_spells(coldSpells, temp, tempClim):
+    """ Flip temp time series if detecting cold spells"""
+    if coldSpells:
+        temp = -1.*temp
+        tempClim = -1.*tempClim
+    return temp, tempClim
+
 def detect(t, temp, climatologyPeriod=[None,None], pctile=90, windowHalfWidth=5, smoothPercentile=True, smoothPercentileWidth=31, minDuration=5, joinAcrossGaps=True, maxGap=2, maxPadLength=False, coldSpells=False, alternateClimatology=False):
     '''
 
@@ -326,10 +333,7 @@ def detect(t, temp, climatologyPeriod=[None,None], pctile=90, windowHalfWidth=5,
 
     tempClim, TClim, yearClim, monthClim, dayClim, doyClim = get_temp_clim_time_series(temp, T, year, month, day, doy, alternateClimatology, month_leapYear, day_leapYear, doy_leapYear)
 
-    # Flip temp time series if detecting cold spells
-    if coldSpells:
-        temp = -1.*temp
-        tempClim = -1.*tempClim
+    temp, tempClim = check_cold_spells(coldSpells, temp, tempClim)
 
     # Pad missing values for all consecutive missing blocks of length <= maxPadLength
     if maxPadLength:
