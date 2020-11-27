@@ -23,7 +23,7 @@ def find_clim_start_end(yearClim, climatologyPeriod):
 
     return clim_start, clim_end
 
-def calculate_stats(TClim, feb29, doyClim, clim_start, clim_end, windowHalfWidth, tempClim, pctile):
+def calculate_thresh_clim(TClim, feb29, doyClim, clim_start, clim_end, windowHalfWidth, tempClim, pctile):
     
     print('****** entered calc method *******')
     # Length of climatological year
@@ -362,7 +362,7 @@ def detect(t, temp, climatologyPeriod=[None,None], pctile=90, windowHalfWidth=5,
     clim_start, clim_end = find_clim_start_end(yearClim, climatologyPeriod)
 
     if not givenClimThresh:
-        thresh_climYear, seas_climYear = calculate_stats(TClim, feb29, doyClim, clim_start, clim_end, windowHalfWidth, tempClim, pctile)
+        thresh_climYear, seas_climYear = calculate_thresh_clim(TClim, feb29, doyClim, clim_start, clim_end, windowHalfWidth, tempClim, pctile)
     else:
         thresh_climYear, seas_climYear =  load_given_clim(givenClimThresh)
 
