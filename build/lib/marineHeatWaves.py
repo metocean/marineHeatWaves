@@ -227,7 +227,7 @@ def load_given_clim(givenClimThresh):
     thresh_climYear = givenClimThresh[1]
     return thresh_climYear, seas_climYear
 
-def detect_forecast(t, temp, givenClimThresh, smoothPercentile=True, smoothPercentileWidth=31, minDuration=5, joinAcrossGaps=True, maxGap=2, maxPadLength=False, coldSpells=False, alternateClimatology=False):
+def detect_forecast(t, temp, givenClimThresh, smoothPercentile=True, smoothPercentileWidth=31, minDuration=5, joinAcrossGaps=True, maxGap=2, maxPadLength=False, coldSpells=False):
     '''
 
     Applies the Hobday et al. (2016) marine heat wave definition to an input time
@@ -236,9 +236,14 @@ def detect_forecast(t, temp, givenClimThresh, smoothPercentile=True, smoothPerce
 
     Inputs:
 
-      t       Time vector, in datetime format (e.g., date(1982,1,1).toordinal())
-              [1D numpy array of length T]
-      temp    Temperature vector [1D numpy array of length T]
+      t                 Time vector, in datetime format (e.g., date(1982,1,1).toordinal())
+                        [1D numpy array of length T]
+      temp              Temperature vector [1D numpy array of length T]
+      givenClimThresh   Specifies a previously calculated daily temperature climatology and 
+                        threshold 1-year time series. Format is as a list of numpy arrays: (1) the 
+                        first element of the list is a climatological temperature vector [1D numpy 
+                        array of length 366 (days)] and (2) the second element of the list a 
+                        temperature threshold vector [1D numpy array of length 366 (days)].
 
     Outputs:
 
@@ -291,15 +296,6 @@ def detect_forecast(t, temp, givenClimThresh, smoothPercentile=True, smoothPerce
 
     Options:
 
-      climatologyPeriod      Period over which climatology is calculated, specified
-                             as list of start and end years. Default is to calculate
-                             over the full range of years in the supplied time series.
-                             Alternate periods suppled as a list e.g. [1983,2012].
-      pctile                 Threshold percentile (%) for detection of extreme values
-                             (DEFAULT = 90)
-      windowHalfWidth        Width of window (one sided) about day-of-year used for
-                             the pooling of values and calculation of threshold percentile
-                             (DEFAULT = 5 [days])
       smoothPercentile       Boolean switch indicating whether to smooth the threshold
                              percentile timeseries with a moving average (DEFAULT = True)
       smoothPercentileWidth  Width of moving average window for smoothing threshold
@@ -317,19 +313,6 @@ def detect_forecast(t, temp, givenClimThresh, smoothPercentile=True, smoothPerce
                              (DEFAULT = False, interpolates over all missing values).
       coldSpells             Specifies if the code should detect cold events instead of
                              heat events. (DEFAULT = False)
-      alternateClimatology   Specifies an alternate temperature time series to use for the
-                             calculation of the climatology. Format is as a list of numpy
-                             arrays: (1) the first element of the list is a time vector,
-                             in datetime format (e.g., date(1982,1,1).toordinal())
-                             [1D numpy array of length TClim] and (2) the second element of
-                             the list is a temperature vector [1D numpy array of length TClim].
-                             (DEFAULT = False)
-      givenClimThresh        Specifies a previously calculated daily temperature climatology and 
-                             threshold 1-year time series. Format is as a list of numpy 
-                             arrays: (1) the first element of the list is a climatological 
-                             temperature vector [1D numpy array of length 366 (days)] and (2) the
-                             second element of the list a temperature threshold vector [1D numpy 
-                             array of length 366 (days)].
 
     Notes:
 
