@@ -93,8 +93,11 @@ def find_clim_start_end(yearClim, climatologyPeriod):
 
     return clim_start, clim_end
 
-def calculate_thresh_clim(TClim, feb29, doyClim, clim_start, clim_end, windowHalfWidth, tempClim, pctile):
+def calculate_thresh_clim(TClim, doyClim, clim_start, clim_end, windowHalfWidth, tempClim, pctile):
     
+    # Constant (doy value for Feb-29) for handling leap-years
+    feb29 = 60
+
     print('****** entered calc method *******')
     # Length of climatological year
     lenClimYear = 366
@@ -347,10 +350,6 @@ def detect_forecast(t, temp, givenClimThresh, smoothPercentile=True, smoothPerce
 
 
     T, year, month, day, doy, month_leapYear, day_leapYear, doy_leapYear = make_time_date_vectors(t)
-
-    # Constants (doy values for Feb-28 and Feb-29) for handling leap-years
-    feb28 = 59
-    feb29 = 60
 
     #
     # Calculate threshold and seasonal climatology (varying with day-of-year)
@@ -619,10 +618,6 @@ def detect(t, temp, climatologyPeriod=[None,None], pctile=90, windowHalfWidth=5,
 
 
     T, year, month, day, doy, month_leapYear, day_leapYear, doy_leapYear = make_time_date_vectors(t)
-    
-    # Constants (doy values for Feb-28 and Feb-29) for handling leap-years
-    feb28 = 59
-    feb29 = 60
 
     # Set climatology period, if unset use full range of available data
     if (climatologyPeriod[0] is None) or (climatologyPeriod[1] is None):
@@ -641,7 +636,7 @@ def detect(t, temp, climatologyPeriod=[None,None], pctile=90, windowHalfWidth=5,
 
     clim_start, clim_end = find_clim_start_end(yearClim, climatologyPeriod)
 
-    thresh_climYear, seas_climYear = calculate_thresh_clim(TClim, feb29, doyClim, clim_start, clim_end, windowHalfWidth, tempClim, pctile)
+    thresh_climYear, seas_climYear = calculate_thresh_clim(TClim, doyClim, clim_start, clim_end, windowHalfWidth, tempClim, pctile)
 
     thresh_climYear, seas_climYear = smooth_time_series(smoothPercentile, smoothPercentileWidth, thresh_climYear, seas_climYear)
 
