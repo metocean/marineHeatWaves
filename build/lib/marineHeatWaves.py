@@ -13,6 +13,44 @@ from scipy import stats
 import scipy.ndimage as ndimage
 from datetime import date
 
+def init_mhw_out_var():
+    """
+    Initialize MHW output variable
+    """
+
+    mhw = {}
+    mhw['time_start'] = [] # datetime format
+    mhw['time_end'] = [] # datetime format
+    mhw['time_peak'] = [] # datetime format
+    mhw['date_start'] = [] # datetime format
+    mhw['date_end'] = [] # datetime format
+    mhw['date_peak'] = [] # datetime format
+    mhw['index_start'] = []
+    mhw['index_end'] = []
+    mhw['index_peak'] = []
+    mhw['duration'] = [] # [days]
+    mhw['duration_moderate'] = [] # [days]
+    mhw['duration_strong'] = [] # [days]
+    mhw['duration_severe'] = [] # [days]
+    mhw['duration_extreme'] = [] # [days]
+    mhw['intensity_max'] = [] # [deg C]
+    mhw['intensity_mean'] = [] # [deg C]
+    mhw['intensity_var'] = [] # [deg C]
+    mhw['intensity_cumulative'] = [] # [deg C]
+    mhw['intensity_max_relThresh'] = [] # [deg C]
+    mhw['intensity_mean_relThresh'] = [] # [deg C]
+    mhw['intensity_var_relThresh'] = [] # [deg C]
+    mhw['intensity_cumulative_relThresh'] = [] # [deg C]
+    mhw['intensity_max_abs'] = [] # [deg C]
+    mhw['intensity_mean_abs'] = [] # [deg C]
+    mhw['intensity_var_abs'] = [] # [deg C]
+    mhw['intensity_cumulative_abs'] = [] # [deg C]
+    mhw['category'] = []
+    mhw['rate_onset'] = [] # [deg C / day]
+    mhw['rate_decline'] = [] # [deg C / day]
+
+    return mhw
+
 def find_clim_start_end(yearClim, climatologyPeriod):
     """
     Find start and end indices of climatology period
@@ -275,40 +313,6 @@ def detect_forecast(t, temp, givenClimThresh, smoothPercentile=True, smoothPerce
 
     '''
 
-    #
-    # Initialize MHW output variable
-    #
-
-    mhw = {}
-    mhw['time_start'] = [] # datetime format
-    mhw['time_end'] = [] # datetime format
-    mhw['time_peak'] = [] # datetime format
-    mhw['date_start'] = [] # datetime format
-    mhw['date_end'] = [] # datetime format
-    mhw['date_peak'] = [] # datetime format
-    mhw['index_start'] = []
-    mhw['index_end'] = []
-    mhw['index_peak'] = []
-    mhw['duration'] = [] # [days]
-    mhw['duration_moderate'] = [] # [days]
-    mhw['duration_strong'] = [] # [days]
-    mhw['duration_severe'] = [] # [days]
-    mhw['duration_extreme'] = [] # [days]
-    mhw['intensity_max'] = [] # [deg C]
-    mhw['intensity_mean'] = [] # [deg C]
-    mhw['intensity_var'] = [] # [deg C]
-    mhw['intensity_cumulative'] = [] # [deg C]
-    mhw['intensity_max_relThresh'] = [] # [deg C]
-    mhw['intensity_mean_relThresh'] = [] # [deg C]
-    mhw['intensity_var_relThresh'] = [] # [deg C]
-    mhw['intensity_cumulative_relThresh'] = [] # [deg C]
-    mhw['intensity_max_abs'] = [] # [deg C]
-    mhw['intensity_mean_abs'] = [] # [deg C]
-    mhw['intensity_var_abs'] = [] # [deg C]
-    mhw['intensity_cumulative_abs'] = [] # [deg C]
-    mhw['category'] = []
-    mhw['rate_onset'] = [] # [deg C / day]
-    mhw['rate_decline'] = [] # [deg C / day]
 
     #
     # Time and dates vectors
@@ -364,6 +368,8 @@ def detect_forecast(t, temp, givenClimThresh, smoothPercentile=True, smoothPerce
     #
     # Find MHWs as exceedances above the threshold
     #
+
+    mhw = init_mhw_out_var()
 
     # Time series of "True" when threshold is exceeded, "False" otherwise
     exceed_bool = temp - clim['thresh']
@@ -606,40 +612,6 @@ def detect(t, temp, climatologyPeriod=[None,None], pctile=90, windowHalfWidth=5,
 
     '''
 
-    #
-    # Initialize MHW output variable
-    #
-
-    mhw = {}
-    mhw['time_start'] = [] # datetime format
-    mhw['time_end'] = [] # datetime format
-    mhw['time_peak'] = [] # datetime format
-    mhw['date_start'] = [] # datetime format
-    mhw['date_end'] = [] # datetime format
-    mhw['date_peak'] = [] # datetime format
-    mhw['index_start'] = []
-    mhw['index_end'] = []
-    mhw['index_peak'] = []
-    mhw['duration'] = [] # [days]
-    mhw['duration_moderate'] = [] # [days]
-    mhw['duration_strong'] = [] # [days]
-    mhw['duration_severe'] = [] # [days]
-    mhw['duration_extreme'] = [] # [days]
-    mhw['intensity_max'] = [] # [deg C]
-    mhw['intensity_mean'] = [] # [deg C]
-    mhw['intensity_var'] = [] # [deg C]
-    mhw['intensity_cumulative'] = [] # [deg C]
-    mhw['intensity_max_relThresh'] = [] # [deg C]
-    mhw['intensity_mean_relThresh'] = [] # [deg C]
-    mhw['intensity_var_relThresh'] = [] # [deg C]
-    mhw['intensity_cumulative_relThresh'] = [] # [deg C]
-    mhw['intensity_max_abs'] = [] # [deg C]
-    mhw['intensity_mean_abs'] = [] # [deg C]
-    mhw['intensity_var_abs'] = [] # [deg C]
-    mhw['intensity_cumulative_abs'] = [] # [deg C]
-    mhw['category'] = []
-    mhw['rate_onset'] = [] # [deg C / day]
-    mhw['rate_decline'] = [] # [deg C / day]
 
     #
     # Time and dates vectors
@@ -702,6 +674,8 @@ def detect(t, temp, climatologyPeriod=[None,None], pctile=90, windowHalfWidth=5,
     #
     # Find MHWs as exceedances above the threshold
     #
+
+    mhw = init_mhw_out_var()
 
     # Time series of "True" when threshold is exceeded, "False" otherwise
     exceed_bool = temp - clim['thresh']
