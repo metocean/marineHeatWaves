@@ -196,12 +196,21 @@ def fill_gaps_with_clim(clim, temp):
     
     return clim, temp
 
-def check_coldSpells(coldSpells, temp, tempClim):
-    """ Flip temp time series if detecting cold spells"""
+def check_coldSpells(coldSpells, vectors):
+    """
+    Flip time series if detecting cold spells
+    Args:
+            coldSpells (bool): True for flipping
+            vectors (list): list of arrays that should be flipped
+    """
     if coldSpells:
-        temp = -1.*temp
-        tempClim = -1.*tempClim
-    return temp, tempClim
+        resp = []
+        for vector in vectors:
+            resp.append(-1.*vector)
+    else:
+        resp = vectors
+
+    return resp
 
 def check_maxPadLength(maxPadLength, pad, temp, tempClim):
     """
@@ -352,15 +361,11 @@ def detect_forecast(t, temp, givenClimThresh, smoothPercentile=True, smoothPerce
 
     T, year, month, day, doy, month_leapYear, day_leapYear, doy_leapYear = make_time_date_vectors(t)
 
-    #
-    # Calculate threshold and seasonal climatology (varying with day-of-year)
-    #
-
-    temp = check_coldSpells(coldSpells, temp)
-
     temp = check_maxPadLength(maxPadLength, pad, temp)
 
     thresh_climYear, seas_climYear =  load_given_clim(givenClimThresh)
+
+    temp, thresh_climYear, seas_climYear = check_coldSpells(coldSpells, [temp, thresh_climYear, seas_climYear])
 
     thresh_climYear, seas_climYear = smooth_time_series(smoothPercentile, smoothPercentileWidth, thresh_climYear, seas_climYear)
 
@@ -629,7 +634,7 @@ def detect(t, temp, climatologyPeriod=[None,None], pctile=90, windowHalfWidth=5,
 
     tempClim, TClim, yearClim, monthClim, dayClim, doyClim = get_temp_clim_time_series(temp, T, year, month, day, doy, alternateClimatology, month_leapYear, day_leapYear, doy_leapYear)
 
-    temp, tempClim = check_coldSpells(coldSpells, temp, tempClim)
+    temp, tempClim = check_coldSpells(coldSpells, [temp, tempClim])
 
     temp, tempClim = check_maxPadLength(maxPadLength, pad, temp, tempClim)
 
