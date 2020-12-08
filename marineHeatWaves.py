@@ -212,15 +212,18 @@ def check_coldSpells(coldSpells, vectors):
 
     return resp
 
-def check_maxPadLength(maxPadLength, pad, temp, tempClim):
+def check_maxPadLength(maxPadLength, pad, vectors_list):
     """
     Pad missing values for all consecutive missing blocks of length <= maxPadLength
     """
     if maxPadLength:
-        temp = pad(temp, maxPadLength=maxPadLength)
-        tempClim = pad(tempClim, maxPadLength=maxPadLength)
+        resp = []
+        for vector in vectors_list:
+            resp.append(pad(vector, maxPadLength=maxPadLength))
+    else:
+        resp = vectors_list
     
-    return temp, tempClim
+    return resp
 
 def load_given_clim(givenClimThresh):
     seas_climYear = givenClimThresh[0]
@@ -344,7 +347,7 @@ def detect_forecast(t, temp, givenClimThresh, smoothPercentile=True, smoothPerce
 
     T, year, month, day, doy, month_leapYear, day_leapYear, doy_leapYear = make_time_date_vectors(t)
 
-    temp = check_maxPadLength(maxPadLength, pad, temp)
+    temp = check_maxPadLength(maxPadLength, pad, [temp])
 
     thresh_climYear, seas_climYear =  load_given_clim(givenClimThresh)
 
@@ -619,7 +622,7 @@ def detect(t, temp, climatologyPeriod=[None,None], pctile=90, windowHalfWidth=5,
 
     temp, tempClim = check_coldSpells(coldSpells, [temp, tempClim])
 
-    temp, tempClim = check_maxPadLength(maxPadLength, pad, temp, tempClim)
+    temp, tempClim = check_maxPadLength(maxPadLength, pad, [temp, tempClim])
 
     clim_start, clim_end = find_clim_start_end(yearClim, climatologyPeriod)
 
