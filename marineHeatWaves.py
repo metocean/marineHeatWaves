@@ -196,19 +196,19 @@ def fill_gaps_with_clim(clim, temp):
     
     return clim, temp
 
-def check_coldSpells(coldSpells, vectors):
+def check_coldSpells(coldSpells, vectors_list):
     """
     Flip time series if detecting cold spells
     Args:
             coldSpells (bool): True for flipping
-            vectors (list): list of arrays that should be flipped
+            vectors_list (list): list of arrays that should be flipped
     """
     if coldSpells:
         resp = []
-        for vector in vectors:
+        for vector in vectors_list:
             resp.append(-1.*vector)
     else:
-        resp = vectors
+        resp = vectors_list
 
     return resp
 
@@ -347,7 +347,7 @@ def detect_forecast(t, temp, givenClimThresh, smoothPercentile=True, smoothPerce
 
     T, year, month, day, doy, month_leapYear, day_leapYear, doy_leapYear = make_time_date_vectors(t)
 
-    temp = check_maxPadLength(maxPadLength, pad, [temp])
+    temp, = check_maxPadLength(maxPadLength, pad, [temp])
 
     thresh_climYear, seas_climYear =  load_given_clim(givenClimThresh)
 
