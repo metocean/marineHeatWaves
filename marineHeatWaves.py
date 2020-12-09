@@ -17,7 +17,6 @@ def init_mhw_out_var():
     """
     Initialize MHW output variable
     """
-
     mhw = {}
     mhw['time_start'] = [] # datetime format
     mhw['time_end'] = [] # datetime format
@@ -54,8 +53,7 @@ def init_mhw_out_var():
 def make_time_date_vectors(t):
     """
     Generate vectors for year, month, day-of-month, and day-of-year
-    """
-    
+    """    
     T = len(t)
     year = np.zeros((T))
     month = np.zeros((T))
@@ -82,23 +80,24 @@ def make_time_date_vectors(t):
     
     return T, year, month, day, doy, month_leapYear, day_leapYear, doy_leapYear
 
-
+# for original detect method only
 def find_clim_start_end(yearClim, climatologyPeriod):
     """
     Find start and end indices of climatology period
     """
-    print('****** entered find clim start end *******')
     clim_start = np.where(yearClim == climatologyPeriod[0])[0][0]
     clim_end = np.where(yearClim == climatologyPeriod[1])[0][-1]
 
     return clim_start, clim_end
 
-def calculate_thresh_clim(TClim, doyClim, clim_start, clim_end, windowHalfWidth, tempClim, pctile):
-    
+# for original detect method only
+def calculate_thresh_clim(TClim, doyClim, clim_start, clim_end, windowHalfWidth, tempClim, pctile):    
+    """
+    Calculate threshold and seasonal climatology (varying with day-of-year) from tempClim variable
+    """
     # Constant (doy value for Feb-29) for handling leap-years
     feb29 = 60
 
-    print('****** entered calc method *******')
     # Length of climatological year
     lenClimYear = 366
     # Inialize arrays
@@ -127,10 +126,11 @@ def calculate_thresh_clim(TClim, doyClim, clim_start, clim_end, windowHalfWidth,
 
     return thresh_climYear, seas_climYear
 
-# for original detect method
+# for original detect method only
 def get_temp_clim_time_series(temp, T, year, month, day, doy, alternateClimatology, month_leapYear, day_leapYear, doy_leapYear):
-    
-    print("************** Entered get_temp_clim... *************")
+    """
+    Get time series from which the threshold and seasonal climatology will be calculated from
+    """
     # if alternate temperature time series is supplied for the calculation of the climatology
     if alternateClimatology:
         tClim = alternateClimatology[0]
@@ -156,8 +156,9 @@ def get_temp_clim_time_series(temp, T, year, month, day, doy, alternateClimatolo
     return tempClim, TClim, yearClim, monthClim, dayClim, doyClim
 
 def smooth_time_series(smoothPercentile, smoothPercentileWidth, thresh_climYear, seas_climYear):
-
-    print("************** Entered smooth... *************")
+    """
+    Apply smoothing to threshold and seasonal climatology time series
+    """
     # Smooth if desired
     if smoothPercentile:
         # If the climatology contains NaNs, then assume it is a <365-day year and deal accordingly
@@ -173,11 +174,10 @@ def smooth_time_series(smoothPercentile, smoothPercentileWidth, thresh_climYear,
 
     return thresh_climYear, seas_climYear
 
-def replicate_clim_to_time_series(TClim, thresh_climYear, seas_climYear, doy):
+def fit_clim_to_time_series(TClim, thresh_climYear, seas_climYear, doy):
     """
-    Generate threshold for full time series
+    Generate threshold and seasonal climatology for full time series
     """
-    print('*********** entered replicate clim *******')
     clim = {}
     clim['thresh'] = np.NaN*np.zeros(TClim)
     clim['seas'] = np.NaN*np.zeros(TClim)
@@ -225,9 +225,14 @@ def check_maxPadLength(maxPadLength, pad, vectors_list):
     
     return resp
 
-def load_given_clim(givenClimThresh):
+# for detect_forecast method only
+def get_given_clim(givenClimThresh):
+    """
+    Get provided external threshold and seasonal climatology time series
+    """
     seas_climYear = givenClimThresh[0]
     thresh_climYear = givenClimThresh[1]
+
     return thresh_climYear, seas_climYear
 
 def detect_forecast(t, temp, givenClimThresh, smoothPercentile=True, smoothPercentileWidth=31, minDuration=5, joinAcrossGaps=True, maxGap=2, maxPadLength=False, coldSpells=False):
@@ -349,13 +354,13 @@ def detect_forecast(t, temp, givenClimThresh, smoothPercentile=True, smoothPerce
 
     temp, = check_maxPadLength(maxPadLength, pad, [temp])
 
-    thresh_climYear, seas_climYear =  load_given_clim(givenClimThresh)
+    thresh_climYear, seas_climYear = get_given_clim(givenClimThresh)
 
     temp, thresh_climYear, seas_climYear = check_coldSpells(coldSpells, [temp, thresh_climYear, seas_climYear])
 
     thresh_climYear, seas_climYear = smooth_time_series(smoothPercentile, smoothPercentileWidth, thresh_climYear, seas_climYear)
 
-    clim = replicate_clim_to_time_series(T, thresh_climYear, seas_climYear, doy)
+    clim = fit_clim_to_time_series(T, thresh_climYear, seas_climYear, doy)
 
     clim, temp = fill_gaps_with_clim(clim, temp)
 
@@ -614,10 +619,6 @@ def detect(t, temp, climatologyPeriod=[None,None], pctile=90, windowHalfWidth=5,
         climatologyPeriod[0] = year[0]
         climatologyPeriod[1] = year[-1]
 
-    #
-    # Calculate threshold and seasonal climatology (varying with day-of-year)
-    #
-
     tempClim, TClim, yearClim, monthClim, dayClim, doyClim = get_temp_clim_time_series(temp, T, year, month, day, doy, alternateClimatology, month_leapYear, day_leapYear, doy_leapYear)
 
     temp, tempClim = check_coldSpells(coldSpells, [temp, tempClim])
@@ -630,7 +631,7 @@ def detect(t, temp, climatologyPeriod=[None,None], pctile=90, windowHalfWidth=5,
 
     thresh_climYear, seas_climYear = smooth_time_series(smoothPercentile, smoothPercentileWidth, thresh_climYear, seas_climYear)
 
-    clim = replicate_clim_to_time_series(TClim, thresh_climYear, seas_climYear, doy)
+    clim = fit_clim_to_time_series(TClim, thresh_climYear, seas_climYear, doy)
 
     clim, temp = fill_gaps_with_clim(clim, temp)
 
