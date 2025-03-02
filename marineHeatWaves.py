@@ -101,8 +101,8 @@ def calculate_thresh_clim(TClim, doyClim, clim_start, clim_end, windowHalfWidth,
     # Length of climatological year
     lenClimYear = 366
     # Inialize arrays
-    thresh_climYear = np.NaN*np.zeros(lenClimYear)
-    seas_climYear = np.NaN*np.zeros(lenClimYear)
+    thresh_climYear = np.nan*np.zeros(lenClimYear)
+    seas_climYear = np.nan*np.zeros(lenClimYear)
     # Loop over all day-of-year values, and calculate threshold and seasonal climatology across years
     for d in range(1,lenClimYear+1):
         # Special case for Feb 29
@@ -179,8 +179,8 @@ def fit_clim_to_time_series(TClim, thresh_climYear, seas_climYear, doy):
     Generate threshold and seasonal climatology for full time series
     """
     clim = {}
-    clim['thresh'] = np.NaN*np.zeros(TClim)
-    clim['seas'] = np.NaN*np.zeros(TClim)
+    clim['thresh'] = np.nan*np.zeros(TClim)
+    clim['seas'] = np.nan*np.zeros(TClim)
     clim['thresh'] = thresh_climYear[doy.astype(int)-1]
     clim['seas'] = seas_climYear[doy.astype(int)-1]
 
